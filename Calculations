@@ -1,0 +1,115 @@
+#This section of code will conduct all of the calculations necessary to find valuable lines.
+## Closing Line Value (CLV). Will need the actual closing lines for calculations.
+#Variables 
+
+#Opening Favorite and Underdog Moneyline
+openMLFav = float(-140)
+openMLDog = float(+110)
+
+#Implied Probablity with Vig
+## Formula
+### if american odds are -, then (american odds / (american odds + 100)). American odds +, then (100 / (american odds + 100))
+
+#Favorite 
+if openMLFav < 0:
+    openMLFav = openMLFav * -1
+    impProbFav = round((openMLFav / (openMLFav + 100))*100, 2)
+else:
+    impProbFav = round((100 / (openMLFav + 100))*100, 2)
+
+#Underdog
+if openMLDog < 0:
+    openMLDog = openMLDog * -1
+    impProbDog = round((openMLDog / (openMLDog + 100))*100, 2)
+else:
+    impProbDog = round((100 / (openMLDog + 100))*100, 2)
+
+
+print('Favorite Imp Prob to win:', impProbFav, '%')
+print('Underdog Imp Prob to win:', impProbDog, '%')
+
+# No Vig Imp. Prob.
+## Formula
+### (implied probability / total implied probability). Multiply by 100 to get the percent.
+totalImpProb = impProbFav + impProbDog
+vig = round(totalImpProb - 100, 2)
+
+noVigImpProbFav = round(((impProbFav / totalImpProb))*100, 2)
+noVigImpProbDog = round(((impProbDog / totalImpProb))*100, 2)
+
+print('Viggorish: ',vig,'%')
+print('No Vig Favorite Imp Prob: ',noVigImpProbFav, '%')
+print('No Vig Favorite Imp Prob: ',noVigImpProbDog, '%')
+
+# Fair Value Odds
+## Formula
+### If greater than .50, then (Vigless Implied probabilty in decimal form / (1 - Imp prob. decimal))
+### Less than .50, ((1 - Vigless Imp. Prob decimal) / Imp. Prob. in decimal form)
+
+noVigImpprobFavDec = noVigImpProbFav / 100
+
+if noVigImpprobFavDec >= .50:
+    favFairValOdds = round(-(noVigImpprobFavDec/(1-noVigImpprobFavDec))*100, 0)
+else: 
+    favFairValOdds = round((1 - noVigImpprobFavDec)/noVigImpprobFavDec*100, 0)
+    
+print('Favorite Fair Value Odds: ',favFairValOdds)
+
+noVigImpprobDogDec = noVigImpProbDog / 100
+
+if noVigImpprobDogDec >= .50:
+    dogFairValOdds = round(-(noVigImpprobDogDec/(1-noVigImpprobDogDec))*100, 0)
+else: 
+    dogFairValOdds = round((1 - noVigImpprobDogDec)/noVigImpprobDogDec*100 , 0)
+    
+print('Dog Fair Value Odds:       ',dogFairValOdds)
+
+# Expected Value (EV)
+## Formula
+### expected value = (fair win probability) x (profit if win) - (fair loss probability) x (stake)
+
+if favFairValOdds < 0:
+    favEV = (noVigImpprobFavDec*100) - (noVigImpprobDogDec * (favFairValOdds*-1))
+else:
+    favEV = (noVigImpprobFavDec*100) - (noVigImpprobDogDec * favFairValOdds)
+
+if dogFairValOdds < 0:
+    dogEV = (noVigImpprobDogDec*(dogFairValOdds*-1)) - (noVigImpprobFavDec * 100)
+else:
+    dogEV = (noVigImpprobDogDec*dogFairValOdds) - (noVigImpprobFavDec * 100)
+
+print('EV of 0 - 1, potential for bet.')
+print('EV of 1 -2, bet moderately.')
+print('EV of 2+, hammer it!')
+print('\nFavorite Expected Value:  ', round(favEV,2))
+print('Underdog Expected Value: ', round(dogEV,2))  
+
+# Kelly Criterion 
+## Formula 
+### f = (bp-q)/b
+### f = bet size based on % of bankroll, b = bet in decimal odds, p = probabilty of winning the wager, 
+### q = probabilty of losing the wager
+## Formula for converting American odds into Decimal odds
+### If positive American Odds, then (american odds / 100) + 1
+### If negative American odds (100/ american odds) + 1
+### In decimal odds, 1 needs to be subtracted from b
+
+bankRoll = 10000
+p = #What is the handicap we think team wins
+q = #What is the handicap we think team loses (100 - p)
+
+#Ditched the + 1 in the equation because 1 has to be subtracted from b anyways. 
+if openMLFav < 0:
+    b = (100 / openMLFav)
+else:
+    b = (openMLFav / 100)
+    
+f = ((b*p) - q)/b
+    
+print(f)
+
+amountToWage = bankRoll * f
+
+print(amountToWage)
+
+
